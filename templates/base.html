@@ -1,0 +1,149 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Speedrun Hub{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}Browse games, categories and world-record runs from Speedrun.com in a fast, dark gaming interface.{% endblock %}">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            ink: {
+              950: '#05060a',
+              900: '#0a0d14',
+              800: '#11151f',
+              700: '#1a2030',
+              600: '#252d42'
+            },
+            neon: {
+              cyan: '#22d3ee',
+              lime: '#a3e635',
+              magenta: '#f472b6',
+              amber: '#fbbf24'
+            }
+          },
+          fontFamily: {
+            display: ['Orbitron', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            body: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif']
+          },
+          boxShadow: {
+            glow: '0 0 28px rgba(34, 211, 238, 0.22)',
+            'glow-lime': '0 0 28px rgba(163, 230, 53, 0.18)'
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/site.css' %}">
+</head>
+<body class="min-h-screen bg-ink-950 font-body text-slate-200 antialiased">
+  <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-neon-cyan focus:px-4 focus:py-2 focus:font-semibold focus:text-ink-950">
+    Skip to main content
+  </a>
+
+  <div class="grid-bg" aria-hidden="true"></div>
+  <div class="glow-orb glow-orb--cyan" aria-hidden="true"></div>
+  <div class="glow-orb glow-orb--lime" aria-hidden="true"></div>
+
+  <header class="relative z-30 border-b border-white/5 bg-ink-950/80 backdrop-blur">
+    <nav class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6" aria-label="Main navigation">
+      <a href="{% url 'core:home' %}" class="group flex items-center gap-2 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-ink-950">
+        <span class="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-neon-cyan to-neon-lime font-display text-sm font-black text-ink-950 shadow-glow">SH</span>
+        <span class="font-display text-sm font-bold tracking-[0.18em] text-white sm:text-base">SPEEDRUN<span class="text-neon-cyan">HUB</span></span>
+      </a>
+
+      <div class="hidden items-center gap-1 md:flex">
+        <a href="{% url 'core:home' %}" class="nav-link">Home</a>
+        <a href="{% url 'core:explorer' %}" class="nav-link">Explorer</a>
+        {% if user.is_authenticated %}
+          <span class="ml-3 hidden items-center gap-2 text-sm text-slate-400 lg:flex">
+            <span class="h-2 w-2 rounded-full bg-neon-lime shadow-glow-lime" aria-hidden="true"></span>
+            {{ user.username }}
+          </span>
+          <form method="post" action="{% url 'accounts:logout' %}" class="ml-2">
+            {% csrf_token %}
+            <button type="submit" class="btn-ghost">Log out</button>
+          </form>
+        {% else %}
+          <a href="{% url 'accounts:login' %}" class="btn-ghost ml-2">Log in</a>
+          <a href="{% url 'accounts:register' %}" class="btn-primary ml-2">Create account</a>
+        {% endif %}
+      </div>
+
+      <button type="button" id="mobile-menu-button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 text-slate-200 transition hover:border-neon-cyan/50 hover:text-neon-cyan focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan md:hidden" aria-controls="mobile-menu" aria-expanded="false" aria-label="Toggle navigation menu">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h16M4 17h16" />
+        </svg>
+      </button>
+    </nav>
+
+    <div id="mobile-menu" class="hidden border-t border-white/5 px-4 pb-4 md:hidden">
+      <div class="flex flex-col gap-1 pt-2">
+        <a href="{% url 'core:home' %}" class="nav-link">Home</a>
+        <a href="{% url 'core:explorer' %}" class="nav-link">Explorer</a>
+        {% if user.is_authenticated %}
+          <div class="mt-2 flex items-center justify-between gap-3 rounded-lg border border-white/5 bg-ink-900 px-3 py-2">
+            <span class="truncate text-sm text-slate-300">{{ user.username }}</span>
+            <form method="post" action="{% url 'accounts:logout' %}">
+              {% csrf_token %}
+              <button type="submit" class="text-sm font-semibold text-neon-cyan hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan">Log out</button>
+            </form>
+          </div>
+        {% else %}
+          <a href="{% url 'accounts:login' %}" class="nav-link mt-2">Log in</a>
+          <a href="{% url 'accounts:register' %}" class="btn-primary mt-2 w-full">Create account</a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  {% if messages %}
+    <div class="relative z-20 mx-auto mt-6 max-w-6xl px-4 sm:px-6" aria-live="polite">
+      {% for message in messages %}
+        <div class="mb-3 flex items-start gap-3 rounded-xl border px-4 py-3 text-sm
+          {% if 'success' in message.tags %}border-neon-lime/30 bg-neon-lime/10 text-neon-lime
+          {% elif 'error' in message.tags %}border-red-400/30 bg-red-400/10 text-red-300
+          {% elif 'warning' in message.tags %}border-neon-amber/30 bg-neon-amber/10 text-neon-amber
+          {% else %}border-neon-cyan/30 bg-neon-cyan/10 text-neon-cyan{% endif %}"
+          {% if 'error' in message.tags or 'warning' in message.tags %}role="alert"{% else %}role="status"{% endif %}>
+          <span class="mt-0.5" aria-hidden="true">&#9679;</span>
+          <span>{{ message }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <main id="main-content" class="relative z-10">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="relative z-10 mt-20 border-t border-white/5 bg-ink-950/60">
+    <div class="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+      <p>Speedrun Hub is a demo project powered by the public <a class="text-neon-cyan hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan" href="https://www.speedrun.com" rel="noopener noreferrer" target="_blank">Speedrun.com</a> API.</p>
+      <p>Game data belongs to its respective owners.</p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var button = document.getElementById('mobile-menu-button');
+      var menu = document.getElementById('mobile-menu');
+      if (!button || !menu) return;
+      button.addEventListener('click', function () {
+        var isOpen = button.getAttribute('aria-expanded') === 'true';
+        button.setAttribute('aria-expanded', String(!isOpen));
+        menu.classList.toggle('hidden', isOpen);
+      });
+    })();
+  </script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

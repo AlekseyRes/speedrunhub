@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Create account &mdash; Speedrun Hub{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-md px-4 py-14 sm:px-6 sm:py-20">
+  <div class="text-center">
+    <span class="badge badge--lime">Join the hub</span>
+    <h1 class="mt-5 font-display text-3xl font-black tracking-tight text-white sm:text-4xl">Create your account</h1>
+    <p class="mt-3 text-sm text-slate-400">Create an account to sign in and browse the Speedrun.com catalog.</p>
+  </div>
+
+  <div class="card mt-8 p-6 sm:p-8">
+    {% if form.non_field_errors %}
+      <div class="mb-5 rounded-xl border border-red-400/30 bg-red-400/10 p-4" role="alert">
+        {% for error in form.non_field_errors %}
+          <p class="text-sm text-red-300">{{ error }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'accounts:register' %}" novalidate class="space-y-5">
+      {% csrf_token %}
+
+      <div>
+        <label for="{{ form.username.id_for_label }}" class="mb-2 block text-sm font-semibold text-slate-200">Username</label>
+        <input
+          type="text"
+          name="{{ form.username.name }}"
+          id="{{ form.username.id_for_label }}"
+          value="{{ form.username.value|default:'' }}"
+          autocomplete="username"
+          autocapitalize="none"
+          spellcheck="false"
+          required
+          class="form-input"
+          {% if form.username.errors %}aria-invalid="true" aria-describedby="username-help username-errors"{% else %}aria-describedby="username-help"{% endif %}
+        >
+        <p id="username-help" class="mt-2 text-xs text-slate-400">150 characters or fewer. Letters, digits, and @/./+/-/_ only.</p>
+        {% if form.username.errors %}
+          <ul id="username-errors" class="mt-2 space-y-1">
+            {% for error in form.username.errors %}<li class="text-xs text-red-300">{{ error }}</li>{% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+
+      <div>
+        <label for="{{ form.email.id_for_label }}" class="mb-2 block text-sm font-semibold text-slate-200">Email address</label>
+        <input
+          type="email"
+          name="{{ form.email.name }}"
+          id="{{ form.email.id_for_label }}"
+          value="{{ form.email.value|default:'' }}"
+          autocomplete="email"
+          inputmode="email"
+          required
+          class="form-input"
+          {% if form.email.errors %}aria-invalid="true" aria-describedby="email-help email-errors"{% else %}aria-describedby="email-help"{% endif %}
+        >
+        <p id="email-help" class="mt-2 text-xs text-slate-400">Required. Must be unique, case-insensitive.</p>
+        {% if form.email.errors %}
+          <ul id="email-errors" class="mt-2 space-y-1">
+            {% for error in form.email.errors %}<li class="text-xs text-red-300">{{ error }}</li>{% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+
+      <div>
+        <label for="{{ form.password1.id_for_label }}" class="mb-2 block text-sm font-semibold text-slate-200">Password</label>
+        <input
+          type="password"
+          name="{{ form.password1.name }}"
+          id="{{ form.password1.id_for_label }}"
+          autocomplete="new-password"
+          required
+          class="form-input"
+          {% if form.password1.errors %}aria-invalid="true" aria-describedby="password1-help password1-errors"{% else %}aria-describedby="password1-help"{% endif %}
+        >
+        <p id="password1-help" class="mt-2 text-xs text-slate-400">
+          At least 8 characters. Avoid common passwords and personal information.
+        </p>
+        {% if form.password1.errors %}
+          <ul id="password1-errors" class="mt-2 space-y-1">
+            {% for error in form.password1.errors %}<li class="text-xs text-red-300">{{ error }}</li>{% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+
+      <div>
+        <label for="{{ form.password2.id_for_label }}" class="mb-2 block text-sm font-semibold text-slate-200">Confirm password</label>
+        <input
+          type="password"
+          name="{{ form.password2.name }}"
+          id="{{ form.password2.id_for_label }}"
+          autocomplete="new-password"
+          required
+          class="form-input"
+          {% if form.password2.errors %}aria-invalid="true" aria-describedby="password2-errors"{% endif %}
+        >
+        {% if form.password2.errors %}
+          <ul id="password2-errors" class="mt-2 space-y-1">
+            {% for error in form.password2.errors %}<li class="text-xs text-red-300">{{ error }}</li>{% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+
+      <button type="submit" class="btn-primary w-full px-6 py-3">Create account</button>
+    </form>
+
+    <p class="mt-6 text-center text-sm text-slate-400">
+      Already have an account?
+      <a href="{% url 'accounts:login' %}" class="font-semibold text-neon-cyan hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan">Log in</a>
+    </p>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Game explorer &mdash; Speedrun Hub{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-6xl px-4 pt-12 sm:px-6 sm:pt-16">
+  <div class="max-w-3xl">
+    <span class="badge badge--lime">Explorer</span>
+    <h1 class="mt-5 font-display text-3xl font-black tracking-tight text-white sm:text-5xl">Find your next run.</h1>
+    <p class="mt-4 text-sm leading-relaxed text-slate-400 sm:text-base">
+      Search the Speedrun.com catalog by name. Results are paginated twelve games at a time.
+    </p>
+  </div>
+
+  <form method="get" action="{% url 'core:explorer' %}" class="mt-8 flex flex-col gap-3 sm:flex-row" role="search">
+    <div class="flex-1">
+      <label for="game-search" class="sr-only">Search games by name</label>
+      <input
+        id="game-search"
+        name="name"
+        type="search"
+        value="{{ query }}"
+        placeholder="Search games, e.g. mario, zelda, celeste"
+        class="form-input"
+        autocomplete="off"
+      >
+    </div>
+    <button type="submit" class="btn-primary px-6 py-3">Search</button>
+    {% if query %}
+      <a href="{% url 'core:explorer' %}" class="btn-ghost px-6 py-3">Clear</a>
+    {% endif %}
+  </form>
+
+  <div class="mt-6 flex flex-wrap items-center justify-between gap-3 border-b border-white/5 pb-4">
+    <p class="text-sm text-slate-400">
+      {% if api_error %}
+        Results unavailable
+      {% elif total_known %}
+        {% if query %}
+          <span class="font-semibold text-white">{{ total|intcomma }}</span> result{{ total|pluralize }} for
+          <span class="font-semibold text-neon-cyan">&ldquo;{{ query }}&rdquo;</span>
+        {% else %}
+          <span class="font-semibold text-white">{{ total|intcomma }}</span> game{{ total|pluralize }} tracked
+        {% endif %}
+      {% else %}
+        Showing <span class="font-semibold text-white">{{ result_count }}</span> result{{ result_count|pluralize }}
+        {% if query %}for <span class="font-semibold text-neon-cyan">&ldquo;{{ query }}&rdquo;</span>{% endif %}
+      {% endif %}
+    </p>
+    {% if not api_error %}
+      <p class="text-xs uppercase tracking-[0.18em] text-slate-400">Page {{ page }}</p>
+    {% endif %}
+  </div>
+</section>
+
+<section class="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+  {% if api_error %}
+    <div class="rounded-2xl border border-red-400/30 bg-red-400/5 p-6" role="alert">
+      <h2 class="font-display text-lg font-semibold text-red-300">Could not load games</h2>
+      <p class="mt-2 max-w-2xl text-sm text-slate-400">{{ api_error }}</p>
+      <a href="{% url 'core:explorer' %}" class="btn-ghost mt-5">Retry</a>
+    </div>
+  {% elif games %}
+    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {% for game in games %}
+        <article class="card group flex flex-col">
+          <a href="{% url 'core:game_detail' game.id %}" class="block focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan" aria-label="View details for {{ game.name }}">
+            {% if game.cover %}
+              <img src="{{ game.cover }}" alt="Box art for {{ game.name }}" class="card-media" loading="lazy" width="480" height="640">
+            {% else %}
+              <div class="card-media grid place-items-center font-display text-4xl font-black text-white/10" aria-hidden="true">{{ game.abbreviation|default:"??" }}</div>
+            {% endif %}
+            <div class="px-5 pt-5">
+              <div class="flex items-start justify-between gap-3">
+                <h2 class="font-display text-lg font-semibold leading-snug text-white group-hover:text-neon-cyan">{{ game.name }}</h2>
+                {% if game.release_year %}<span class="badge shrink-0">{{ game.release_year }}</span>{% endif %}
+              </div>
+            </div>
+          </a>
+          <div class="mt-auto flex items-center justify-between gap-3 px-5 py-4">
+            <a href="{% url 'core:game_detail' game.id %}" class="text-sm font-semibold text-neon-cyan hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan">Details &rarr;</a>
+            {% if game.weblink %}
+              <a href="{{ game.weblink }}" target="_blank" rel="noopener noreferrer" class="text-xs font-medium text-slate-400 hover:text-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan">
+                Speedrun.com &#8599;
+              </a>
+            {% endif %}
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+
+    {% if has_previous or has_next %}
+      <nav class="mt-10 flex items-center justify-between gap-4" aria-label="Explorer pagination">
+        {% if has_previous %}
+          <a href="{{ previous_url }}" class="btn-ghost">&larr; Previous</a>
+        {% else %}
+          <span class="btn-ghost pointer-events-none opacity-40" aria-disabled="true">&larr; Previous</span>
+        {% endif %}
+        <span class="text-sm text-slate-400">Page {{ page }}</span>
+        {% if has_next %}
+          <a href="{{ next_url }}" class="btn-primary">Next &rarr;</a>
+        {% else %}
+          <span class="btn-ghost pointer-events-none opacity-40" aria-disabled="true">Next &rarr;</span>
+        {% endif %}
+      </nav>
+    {% endif %}
+  {% else %}
+    <div class="rounded-2xl border border-white/10 bg-ink-900 p-10 text-center">
+      <p class="font-display text-xl font-semibold text-white">No games found</p>
+      <p class="mx-auto mt-3 max-w-md text-sm text-slate-400">
+        {% if query %}
+          Nothing matched &ldquo;{{ query }}&rdquo;. Try a shorter or different search term.
+        {% else %}
+          The catalog returned no games. Please try again later.
+        {% endif %}
+      </p>
+      {% if query %}<a href="{% url 'core:explorer' %}" class="btn-ghost mt-6">Clear search</a>{% endif %}
+      {% if has_previous or has_next %}
+        <nav class="mt-6 flex flex-wrap items-center justify-center gap-4" aria-label="Explorer pagination">
+          {% if has_previous %}
+            <a href="{{ previous_url }}" class="btn-ghost">&larr; Previous</a>
+          {% endif %}
+          <span class="text-sm text-slate-400">Page {{ page }}</span>
+          {% if has_next %}
+            <a href="{{ next_url }}" class="btn-primary">Next &rarr;</a>
+          {% endif %}
+        </nav>
+      {% endif %}
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

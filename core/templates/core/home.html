@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Speedrun Hub &mdash; Chase the world record{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-6xl px-4 pb-10 pt-16 sm:px-6 sm:pt-24">
+  <div class="animate-fade-up max-w-3xl">
+    <span class="badge badge--cyan">
+      <span class="h-1.5 w-1.5 rounded-full bg-neon-cyan" aria-hidden="true"></span>
+      Live Speedrun.com data
+    </span>
+    <h1 class="mt-6 font-display text-4xl font-black leading-tight tracking-tight text-white sm:text-6xl">
+      Chase the
+      <span class="bg-gradient-to-r from-neon-cyan via-neon-lime to-neon-magenta bg-clip-text text-transparent">world record</span>.
+    </h1>
+    <p class="mt-5 max-w-2xl text-base leading-relaxed text-slate-400 sm:text-lg">
+      Browse thousands of games, dig into categories, and study the fastest runs on the
+      leaderboard. Speedrun Hub turns the Speedrun.com API into a clean, focused hub for
+      runners and fans.
+    </p>
+    <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+      <a href="{% url 'core:explorer' %}" class="btn-primary px-6 py-3 text-base">
+        Explore games
+        <span aria-hidden="true">&rarr;</span>
+      </a>
+      {% if user.is_authenticated %}
+        <a href="{% url 'core:explorer' %}" class="btn-ghost px-6 py-3 text-base">Welcome back, {{ user.username }}</a>
+      {% else %}
+        <a href="{% url 'accounts:register' %}" class="btn-ghost px-6 py-3 text-base">Create account</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <dl class="mt-14 grid gap-4 sm:grid-cols-3">
+    <div class="card p-6">
+      <dt class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+        {% if total_known %}Games indexed{% else %}Catalog status{% endif %}
+      </dt>
+      <dd class="mt-3 font-display text-3xl font-bold {% if not total_known and not api_error %}text-neon-cyan{% else %}text-white{% endif %}">
+        {% if api_error %}&mdash;{% elif total_known %}{{ total_games|intcomma }}{% else %}Live{% endif %}
+      </dd>
+      <p class="mt-2 text-sm text-slate-400">
+        {% if total_known %}Indexed by the public Speedrun.com API.{% else %}Streaming the public Speedrun.com catalog in real time.{% endif %}
+      </p>
+    </div>
+    <div class="card p-6">
+      <dt class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Featured today</dt>
+      <dd class="mt-3 font-display text-3xl font-bold text-white">
+        {% if api_error %}&mdash;{% else %}{{ featured_games|length }}{% endif %}
+      </dd>
+      <p class="mt-2 text-sm text-slate-400">Hand-picked from the latest catalog page.</p>
+    </div>
+    <div class="card p-6">
+      <dt class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Leaderboards</dt>
+      <dd class="mt-3 font-display text-3xl font-bold text-neon-lime">Top 3</dd>
+      <p class="mt-2 text-sm text-slate-400">Top-three previews for up to four per-game categories per game.</p>
+    </div>
+  </dl>
+</section>
+
+<section class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <h2 class="font-display text-2xl font-bold text-white sm:text-3xl">Featured games</h2>
+      <p class="mt-2 text-sm text-slate-400">A quick look at what the community is running right now.</p>
+    </div>
+    <a href="{% url 'core:explorer' %}" class="text-sm font-semibold text-neon-cyan hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan">View all games &rarr;</a>
+  </div>
+
+  {% if api_error %}
+    <div class="mt-8 rounded-2xl border border-neon-amber/30 bg-neon-amber/5 p-6" role="alert">
+      <h3 class="font-display text-lg font-semibold text-neon-amber">Live data is unavailable</h3>
+      <p class="mt-2 max-w-2xl text-sm text-slate-400">{{ api_error }}</p>
+      <a href="{% url 'core:home' %}" class="btn-ghost mt-5">Try again</a>
+    </div>
+  {% elif featured_games %}
+    <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {% for game in featured_games %}
+        <a href="{% url 'core:game_detail' game.id %}" class="card group block focus:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan">
+          {% if game.cover %}
+            <img src="{{ game.cover }}" alt="Box art for {{ game.name }}" class="card-media" loading="lazy" width="480" height="640">
+          {% else %}
+            <div class="card-media grid place-items-center font-display text-4xl font-black text-white/10" aria-hidden="true">{{ game.abbreviation|default:"??" }}</div>
+          {% endif %}
+          <div class="p-5">
+            <div class="flex items-center justify-between gap-3">
+              <h3 class="truncate font-display text-lg font-semibold text-white group-hover:text-neon-cyan">{{ game.name }}</h3>
+              {% if game.release_year %}<span class="badge">{{ game.release_year }}</span>{% endif %}
+            </div>
+            <p class="mt-2 text-sm text-slate-400">{{ game.abbreviation|default:"Speedrun" }}</p>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="mt-8 rounded-2xl border border-white/10 bg-ink-900 p-8 text-center">
+      <p class="text-slate-400">No featured games are available right now.</p>
+    </div>
+  {% endif %}
+</section>
+
+<section class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+  <div class="card overflow-hidden">
+    <div class="grid gap-8 p-8 sm:p-12 lg:grid-cols-[1.4fr_1fr] lg:items-center">
+      <div>
+        <h2 class="font-display text-2xl font-bold text-white sm:text-3xl">Join Speedrun Hub</h2>
+        <p class="mt-3 max-w-xl text-sm leading-relaxed text-slate-400 sm:text-base">
+          Create a free account to sign in and browse the catalog with your profile.
+          Registration uses Django's authentication and password validators.
+        </p>
+      </div>
+      <div class="flex flex-col gap-3 sm:flex-row lg:justify-end">
+        {% if user.is_authenticated %}
+          <a href="{% url 'core:explorer' %}" class="btn-primary px-6 py-3">Browse the catalog</a>
+        {% else %}
+          <a href="{% url 'accounts:register' %}" class="btn-primary px-6 py-3">Create your account</a>
+          <a href="{% url 'accounts:login' %}" class="btn-ghost px-6 py-3">Log in</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
